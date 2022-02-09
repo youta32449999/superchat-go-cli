@@ -10,6 +10,7 @@ import (
 	"golang.org/x/image/font"
 	"golang.org/x/image/math/fixed"
 	"image"
+	"image/color"
 	"image/png"
 	_ "image/png"
 	"log"
@@ -18,10 +19,25 @@ import (
 	"strings"
 )
 
-//go:embed "template/midori.png"
-var templateBytes []byte
+//go:embed "template/water.png"
+var waterBytes []byte
 
-//go:embed "template/icon192.png"
+//go:embed "template/green.png"
+var greenBytes []byte
+
+//go:embed "template/yellow.png"
+var yellowBytes []byte
+
+//go:embed "template/orange.png"
+var orangeBytes []byte
+
+//go:embed "template/pink.png"
+var pinkBytes []byte
+
+//go:embed "template/red.png"
+var redBytes []byte
+
+//go:embed "template/gopher192.png"
 var iconBytes []byte
 
 //go:embed "font/Koruri/Koruri-Regular.ttf"
@@ -40,6 +56,22 @@ func main() {
 	}
 	var message = args[2]
 
+	var templateBytes []byte
+	switch {
+	case amount < 500:
+		templateBytes = waterBytes
+	case amount < 1000:
+		templateBytes = greenBytes
+	case amount < 2000:
+		templateBytes = yellowBytes
+	case amount < 5000:
+		templateBytes = orangeBytes
+	case amount < 10000:
+		templateBytes = pinkBytes
+	default:
+		templateBytes = redBytes
+	}
+
 	templateImage, _, err := image.Decode(bytes.NewReader(templateBytes))
 	if err != nil {
 		log.Fatal(err)
@@ -52,6 +84,10 @@ func main() {
 
 	// 元画像をリサイズ
 	resized := image.NewRGBA(image.Rect(0, 0, iconImage.Bounds().Size().X*3/5, iconImage.Bounds().Size().Y*3/5))
+	// iconに透過があると汚くみえるので白い画像に合成して背景を白にする
+	c := color.RGBA{255, 255, 255, 255} // RGBA で色を指定(B が 255 なので青)
+	draw.Draw(resized, resized.Bounds(), &image.Uniform{c}, image.Point{0, 0}, draw.Src)
+
 	draw.CatmullRom.Scale(resized, resized.Bounds(), iconImage, iconImage.Bounds(), draw.Over, nil)
 
 	//オリジナル画像上のどこからlogoイメージを重ねるか
@@ -65,15 +101,19 @@ func main() {
 	draw.Draw(rgba, logoRectangle, resized, image.Point{0, 0}, draw.Src)
 	draw.Draw(rgba, originRectangle, templateImage, image.Point{0, 0}, draw.Over)
 
-	drawName(rgba, name)
-	drawAmount(rgba, amount)
-	drawText(rgba, message)
+	fontColor := image.Black
+	if amount >= 2000 {
+		fontColor = image.White
+	}
+	drawName(rgba, name, fontColor)
+	drawAmount(rgba, amount, fontColor)
+	drawText(rgba, message, fontColor)
 	outputImage(rgba)
 
 	fmt.Println("画像の出力が完了しました")
 }
 
-func drawName(img draw.Image, name string) {
+func drawName(img draw.Image, name string, fontColor image.Image) {
 	// フォントファイルを読み込み
 	ft, err := truetype.Parse(regularFontBytes)
 	if err != nil {
@@ -96,7 +136,7 @@ func drawName(img draw.Image, name string) {
 
 	dr := &font.Drawer{
 		Dst:  img,
-		Src:  image.Black,
+		Src:  fontColor,
 		Face: face,
 		Dot:  fixed.Point26_6{},
 	}
@@ -107,7 +147,7 @@ func drawName(img draw.Image, name string) {
 	dr.DrawString(text)
 }
 
-func drawAmount(img draw.Image, amount int) {
+func drawAmount(img draw.Image, amount int, fontColor image.Image) {
 	// フォントファイルを読み込み
 	ft, err := truetype.Parse(semiBoldFontBytes)
 	if err != nil {
@@ -124,24 +164,24 @@ func drawAmount(img draw.Image, amount int) {
 		SubPixelsY:        0,
 	}
 
-	text := convert(amount)
+	text := fmt.Sprintf("¥%s", convert(amount))
 
 	face := truetype.NewFace(ft, &opt)
 
 	dr := &font.Drawer{
 		Dst:  img,
-		Src:  image.Black,
+		Src:  fontColor,
 		Face: face,
 		Dot:  fixed.Point26_6{},
 	}
 
-	dr.Dot.X = 220 * 64
+	dr.Dot.X = 190 * 64
 	dr.Dot.Y = fixed.I(115)
 
 	dr.DrawString(text)
 }
 
-func drawText(img draw.Image, text string) {
+func drawText(img draw.Image, text string,  fontColor image.Image) {
 	ft, err := truetype.Parse(semiBoldFontBytes)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -161,7 +201,7 @@ func drawText(img draw.Image, text string) {
 
 	dr := &font.Drawer{
 		Dst:  img,
-		Src:  image.Black,
+		Src:  fontColor,
 		Face: face,
 		Dot:  fixed.Point26_6{},
 	}
