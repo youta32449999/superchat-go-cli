@@ -40,10 +40,10 @@ var redBytes []byte
 //go:embed "template/gopher192.png"
 var iconBytes []byte
 
-//go:embed "font/Koruri/Koruri-Regular.ttf"
+//go:embed "font/Koruri-Regular.ttf"
 var regularFontBytes []byte
 
-//go:embed "font/Koruri/Koruri-Semibold.ttf"
+//go:embed "font/Koruri-Semibold.ttf"
 var semiBoldFontBytes []byte
 
 func main() {
