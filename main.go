@@ -110,7 +110,7 @@ func main() {
 	drawText(rgba, message, fontColor)
 	outputImage(rgba)
 
-	fmt.Println("画像の出力が完了しました")
+	fmt.Println("created spacha.png")
 }
 
 func drawName(img draw.Image, name string, fontColor image.Image) {
