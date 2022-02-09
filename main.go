@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	_ "embed"
+	"flag"
 	"fmt"
 	"github.com/golang/freetype/truetype"
 	"golang.org/x/image/draw"
@@ -13,6 +14,7 @@ import (
 	_ "image/png"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -29,6 +31,15 @@ var regularFontBytes []byte
 var semiBoldFontBytes []byte
 
 func main() {
+	flag.Parse()
+	args := flag.Args()
+	var name  = args[0]
+	var amount, err = strconv.Atoi(args[1])
+	if err != nil {
+		log.Fatal(err)
+	}
+	var message = args[2]
+
 	templateImage, _, err := image.Decode(bytes.NewReader(templateBytes))
 	if err != nil {
 		log.Fatal(err)
@@ -54,9 +65,9 @@ func main() {
 	draw.Draw(rgba, logoRectangle, resized, image.Point{0, 0}, draw.Src)
 	draw.Draw(rgba, originRectangle, templateImage, image.Point{0, 0}, draw.Over)
 
-	drawName(rgba, "youta")
-	drawAmount(rgba, 1000000)
-	drawText(rgba, "一位おめぺこぉぉぉぉぉぉ！！！")
+	drawName(rgba, name)
+	drawAmount(rgba, amount)
+	drawText(rgba, message)
 	outputImage(rgba)
 
 	fmt.Println("画像の出力が完了しました")
